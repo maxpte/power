@@ -12,6 +12,7 @@ import com.payrollbackend.model.PayrollBatch;
 import com.payrollbackend.model.PayrollBatchPayment;
 import com.payrollbackend.service.US4_BatchSummaryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,5 +57,37 @@ public class US4_BatchSummaryController {
             return batchOpt.get().getPayments();
         }
         return null;
+    }
+
+    // UPDATE a batch by reference (operators; only when status is PENDING/NOT_APPROVED)
+    @PutMapping("/{reference}")
+    public ResponseEntity<PayrollBatch> updateBatchByReference(@PathVariable String reference, @RequestBody PayrollBatch payload) {
+        return batchService.updateBatch(reference, payload)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(409).build());
+    }
+
+    // DELETE a batch by reference (operators; only when status is PENDING/NOT_APPROVED)
+    @DeleteMapping("/{reference}")
+    public ResponseEntity<Void> deleteBatchByReference(@PathVariable String reference) {
+        boolean ok = batchService.deleteBatch(reference);
+        if (!ok) return ResponseEntity.status(409).build();
+        return ResponseEntity.noContent().build();
+    }
+
+    // UPDATE a single payment row
+    @PutMapping("/{reference}/payment/{paymentId}")
+    public ResponseEntity<PayrollBatchPayment> updatePayment(@PathVariable String reference, @PathVariable Long paymentId, @RequestBody PayrollBatchPayment payload) {
+        return batchService.updatePayment(reference, paymentId, payload)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(409).build());
+    }
+
+    // DELETE a single payment row
+    @DeleteMapping("/{reference}/payment/{paymentId}")
+    public ResponseEntity<Void> deletePayment(@PathVariable String reference, @PathVariable Long paymentId) {
+        boolean ok = batchService.deletePayment(reference, paymentId);
+        if (!ok) return ResponseEntity.status(409).build();
+        return ResponseEntity.noContent().build();
     }
 }

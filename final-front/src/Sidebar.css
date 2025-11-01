@@ -1,0 +1,80 @@
+/* Sidebar.css */
+.sidebar-custom {
+  background: #FFFFFF;
+  height: calc(100vh - 56px);
+  border-right: 1px solid #7BB6F5;
+  position: fixed;
+  top: 56px;
+  width: 250px;
+  transition: left 0.3s ease;
+  overflow-y: hidden;
+  z-index: 1000;
+  border-top: none;
+}
+
+.sidebar-custom .nav-link,
+.sidebar-custom button.nav-link {
+  padding: 12px 20px;
+  color: #0066cc;
+  transition: all 0.2s ease;
+  border: none;
+  text-align: left;
+  text-decoration: none;
+  display: block;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.sidebar-custom .nav-link:hover,
+.sidebar-custom button.nav-link:hover,
+.sidebar-custom .submenu-item:hover {
+  background: #CDF4BF !important;
+  color: #0066cc !important;
+}
+
+.sidebar-custom .nav-link.active {
+  color: #0066cc;
+  font-weight: 600;
+  background: #e6f2ff;
+  border-left: 3px solid #0066cc;
+}
+
+.sidebar-custom .nav-link i {
+  width: 20px;
+}
+
+.submenu-item {
+  padding-left: 45px;
+  font-size: 0.9rem;
+}
+
+.main-content-shifted {
+  min-height: calc(100vh - 56px);
+  transition: margin-left 0.3s ease;
+}
+
+.status-badge {
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+  display: inline-block;
+  min-width: 100px;
+  text-align: center;
+}
+
+.status-pending {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.status-approved {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.status-rejected {
+  background-color: #dc3545;
+  color: #fff;
+}

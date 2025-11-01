@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Service
 public class US7_AccountStatementService {
@@ -95,6 +96,8 @@ public class US7_AccountStatementService {
         // 2. Call the NEW repository method with the dates
         List<PayrollBatch> batches = batchRepo
                 .findBatchesByAccountAndStatusAndDateRange(accountId, "APPROVED", startDateTime, endDateTime);
+        // Ensure chronological order for correct running balance
+        batches.sort(Comparator.comparing(PayrollBatch::getCreatedAt));
 
         // --- END OF FIX ---
 
@@ -105,8 +108,26 @@ public class US7_AccountStatementService {
         // Get currency from first batch
         String currency = batches.get(0).getCurrency();
 
-        // Calculate opening balance before the first transaction
-        double openingBalance = calculateOpeningBalanceForStatement(accountId, currency, batches.get(0).getCreatedAt());
+        // Compute opening using live balance plus debits difference: BLIVE + (D(now) - D(start))
+        double currentBalance = calculateAccountBalanceById(accountId, currency); // BLIVE
+        // All approved debits up to now (same as sum over all approved batches for this account/currency)
+        double totalDebitsUpToNow = batchRepo
+                .findByDebitAccount_IdAndCurrencyAndStatus(accountId, currency, "APPROVED")
+                .stream()
+                .mapToDouble(PayrollBatch::getTotalDebitAmount)
+                .sum();
+        // Approved debits strictly before the start date (if provided)
+        double totalDebitsBeforeStart = 0.0;
+        if (startDateTime != null) {
+            final LocalDateTime start = startDateTime; // capture for lambda
+            totalDebitsBeforeStart = batchRepo
+                    .findByDebitAccount_IdAndCurrencyAndStatus(accountId, currency, "APPROVED")
+                    .stream()
+                    .filter(b -> b.getCreatedAt().isBefore(start))
+                    .mapToDouble(PayrollBatch::getTotalDebitAmount)
+                    .sum();
+        }
+        double openingBalance = currentBalance + (totalDebitsUpToNow - totalDebitsBeforeStart);
         double runningBalance = openingBalance;
 
         // Clear transactions list to rebuild with correct running balance
@@ -179,23 +200,21 @@ public class US7_AccountStatementService {
     // Helper: Calculate account balance (initial - total debits)
     private double calculateAccountBalance(String accountNumber, String currency) {
         Account account = US7AccountRepository.findByNumber(accountNumber).orElse(null);
-        if (account == null) {
+        if (account == null || account.getBalance() == null) {
             return 0.0;
         }
-        return calculateAccountBalanceById(account.getId(), currency);
+        // Current live balance from DB
+        return account.getBalance().doubleValue();
     }
 
     // Helper: Calculate account balance by account id
     private double calculateAccountBalanceById(Long accountId, String currency) {
-        double initialBalance = getInitialBalance(String.valueOf(accountId), currency);
-
-        double totalDebited = batchRepo
-                .findByDebitAccount_IdAndCurrencyAndStatus(accountId, currency, "APPROVED")
-                .stream()
-                .mapToDouble(PayrollBatch::getTotalDebitAmount)
-                .sum();
-
-        return initialBalance - totalDebited;
+        Optional<Account> accOpt = US7AccountRepository.findById(accountId);
+        if (accOpt.isPresent() && accOpt.get().getBalance() != null) {
+            // Current live balance from DB
+            return accOpt.get().getBalance().doubleValue();
+        }
+        return 0.0;
     }
 
     // Helper: Calculate opening balance before the first transaction in the statement range
@@ -214,7 +233,22 @@ public class US7_AccountStatementService {
 
     // Helper: Get initial balance (configure these values)
     private double getInitialBalance(String accountNumber, String currency) {
-        // You can configure these in application.properties or database
+        // Deprecated: kept for backward compatibility. Prefer getInitialBalanceById.
+        try {
+            Long id = Long.parseLong(accountNumber);
+            return getInitialBalanceById(id, currency);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    // Use actual Account.balance from DB as the initial balance for statements
+    private double getInitialBalanceById(Long accountId, String currency) {
+        Optional<Account> accOpt = US7AccountRepository.findById(accountId);
+        if (accOpt.isPresent() && accOpt.get().getBalance() != null) {
+            return accOpt.get().getBalance().doubleValue();
+        }
+        // Fallback if no account/balance found
         switch (currency) {
             case "USD": return 50000.00;
             case "EUR": return 40000.00;
