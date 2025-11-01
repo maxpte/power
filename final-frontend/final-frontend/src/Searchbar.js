@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import SearchInput from "./SearchInput"; // ✅ imported new reusable search component
+import { exportTableToCSV } from "./exportTableToCSV";
 
 const SearchBar = ({ filters, setFilters }) => {
   const [showFilter, setShowFilter] = useState(false);
@@ -6,20 +8,8 @@ const SearchBar = ({ filters, setFilters }) => {
 
   // Export table data to CSV
   const exportCSV = () => {
-    const rows = document.querySelectorAll("table tr");
-    const csv = Array.from(rows)
-      .map((row) =>
-        Array.from(row.cells)
-          .map((cell) => "${cell.innerText}")
-          .join(",")
-      )
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Payroll_List.csv";
-    link.click();
+    const table = document.querySelector("table");
+    exportTableToCSV(table, "Payroll_List.csv");
   };
 
   return (
@@ -34,15 +24,8 @@ const SearchBar = ({ filters, setFilters }) => {
 
       {/* 🔹 Search + Filter + Sort + Settings */}
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-        {/* Search Bar */}
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search in List"
-          value={filters.search}
-          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-          style={{ maxWidth: "350px", flexGrow: 1 }}
-        />
+        <SearchInput search={filters.search} setFilters={setFilters} />
+        {/* ✅ Reusable Search Input */}
 
         {/* Filter + Sort + Settings Buttons */}
         <div className="d-flex align-items-center gap-2 position-relative">
@@ -70,12 +53,9 @@ const SearchBar = ({ filters, setFilters }) => {
                   }
                 >
                   <option value="All">All Statuses</option>
-                  <option value="Batch Fully Authorized">
-                    Batch Fully Authorized
-                  </option>
-                  <option value="Returned for Authorization">
-                    Returned for Authorization
-                  </option>
+                  <option value="APPROVED">APPROVED</option>
+                  <option value="REJECTED">REJECTED</option>
+                  <option value="PENDING">PENDING</option>
                 </select>
               </div>
             )}
@@ -120,7 +100,7 @@ const SearchBar = ({ filters, setFilters }) => {
               setFilters({ search: "", status: "All", sort: "none" })
             }
           >
-            Settings
+            Reset
           </button>
         </div>
       </div>

@@ -65,7 +65,8 @@ const Payroll = () => {
   const handleDel = async (idx) => {
     const batch = tableData[idx];
     try {
-      const res = await api.delete(`/${batch.batchRefNo}`); // US4 delete endpoint
+      const res = await api.delete(batch.batchRefNo); 
+      // US4 delete endpoint
       if (res.status === 409) {
         alert("Delete allowed only when status is Pending or Not Approved.");
         return;
@@ -73,7 +74,8 @@ const Payroll = () => {
       const newData = tableData.filter((_, i) => i !== idx);
       setTableData(newData);
       setOpenMenu(null);
-      setSuccessMsg(`Batch ${batch.batchRefNo} deleted successfully.`);
+      // Correct code
+setSuccessMsg(`Batch ${batch.batchRefNo} deleted successfully. :)`);
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (error) {
       console.error("❌ Delete failed:", error);
@@ -90,7 +92,8 @@ const Payroll = () => {
   const handleSave = async () => {
     try {
       const updatedBatch = { ...editValues };
-      const res = await api.put(`/${updatedBatch.batchRefNo}`, updatedBatch); // US4 update endpoint
+      const res = await api.put(`/${updatedBatch.batchRefNo}`, updatedBatch);
+      // US4 update endpoint
       if (res.status === 409) {
         alert("Edit allowed only when status is Pending or Not Approved.");
         return;
@@ -127,6 +130,14 @@ const Payroll = () => {
     }
     return res;
   }, [filters, tableData]);
+
+  const statusClass = (s) => {
+    const v = String(s || "").toUpperCase();
+    if (v === "APPROVED") return "fw-bold text-success";
+    if (v === "PENDING") return "fw-bold text-warning";
+    if (v === "REJECTED" || v === "NOT APPROVED") return "fw-bold text-danger";
+    return "";
+  };
 
   return (
     <>
@@ -234,7 +245,7 @@ const Payroll = () => {
                           }
                         />
                       </td>
-                      <td>{batch.status}</td>
+                      <td className={statusClass(batch.status)}>{batch.status}</td>
                       <td className="text-center">
                         <button
                           className="btn btn-sm btn-success me-1"
@@ -258,8 +269,7 @@ const Payroll = () => {
                         style={{ cursor: "pointer" }}
                         // 5. === FIX: NAVIGATION ROUTE ===
                         // This should match your App.js route, e.g., /batch/:batchRefNo
-                        onClick={() => navigate(`/approvals/batches/${batch.batchRefNo}`)} 
-                      >
+onClick={() => navigate(`/approvals/batches/${batch.batchRefNo}`)}                      >
                         {batch.batchRefNo}
                       </td>
                       <td className="text-center">
@@ -271,7 +281,7 @@ const Payroll = () => {
                       <td>{batch.currency} {Number(batch.maxDebitAmount).toLocaleString()}</td>
                       <td>{batch.currency} {Number(batch.totalDebitAmount).toLocaleString()}</td>
                       <td>{batch.debitAccountNo}</td>
-                      <td>{batch.status}</td>
+                      <td className={statusClass(batch.status)}>{batch.status}</td>
                       <td className="text-center position-relative">
                         <button
                           className="btn btn-sm btn-outline-secondary"
@@ -299,14 +309,13 @@ const Payroll = () => {
                               className="btn btn-sm btn-outline-primary w-100 mb-1"
                               onClick={() =>
                                 // 5. === FIX: NAVIGATION ROUTE ===
-                                navigate(`/approvals/batches/${batch.batchRefNo}`)
-                              }
+navigate(`/approvals/batches/${batch.batchRefNo}`)                              }
                             >
                               View Summary
                             </button>
                             
                             {/* 6. === FIX: CORRECT ROLE LOGIC === */}
-                            {isOperator && (batch.status === "PENDING" || batch.status === "DRAFT" || batch.status === "REJECTED") && (
+                            {isOperator && (batch.status === "PENDING" || batch.status === "DRAFT") && (
                               <>
                                 <button
                                   className="btn btn-sm btn-outline-danger w-100"
@@ -343,4 +352,4 @@ const Payroll = () => {
   );
 };
 
-export default Payroll;
+export default Payroll;
