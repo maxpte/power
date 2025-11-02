@@ -17,30 +17,30 @@ public class DataSeeder {
         return args -> {
             if (US7AccountRepository.count() == 0) {
                 Account inr = new Account();
-                inr.setName("Main INR Account");
-                inr.setBank("Indian Bank");
-                inr.setNumber("INR-001");
+                inr.setName("INR Account");
+                inr.setBank("Standard Chartered INR Operating A/C");
+                inr.setNumber("500012345678");
                 inr.setCurrency("INR");
-                inr.setDescription("Primary INR settlement account");
-                inr.setBalance(new BigDecimal("1000000.00"));
+                inr.setDescription("Used for salary payouts and regular payroll batches.");
+                inr.setBalance(new BigDecimal("10000000.00"));
                 inr.setLastUpdated(LocalDateTime.now());
 
                 Account usd = new Account();
-                usd.setName("USD Nostro");
-                usd.setBank("Bank of America");
-                usd.setNumber("USD-001");
+                usd.setName("USD Account");
+                usd.setBank("Standard Chartered USD Nostro");
+                usd.setNumber("8881234567");
                 usd.setCurrency("USD");
-                usd.setDescription("USD account for international payrolls");
-                usd.setBalance(new BigDecimal("500000.00"));
+                usd.setDescription("Used for payroll in US Dollars. SWIFT-enabled.");
+                usd.setBalance(new BigDecimal("125000.00"));
                 usd.setLastUpdated(LocalDateTime.now());
 
                 Account eur = new Account();
-                eur.setName("EUR Nostro");
-                eur.setBank("Deutsche Bank");
-                eur.setNumber("EUR-001");
+                eur.setName("EUR Account");
+                eur.setBank("Standard Chartered EUR Treasury");
+                eur.setNumber("300098765432");
                 eur.setCurrency("EUR");
-                eur.setDescription("EUR account for SEPA payments");
-                eur.setBalance(new BigDecimal("300000.00"));
+                eur.setDescription("For euro-denominated payroll. SEPA supported.");
+                eur.setBalance(new BigDecimal("2700000.00"));
                 eur.setLastUpdated(LocalDateTime.now());
 
                 US7AccountRepository.save(inr);
